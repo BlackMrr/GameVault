@@ -1,0 +1,61 @@
+name: Build GameVault for Windows
+
+on:
+  push:
+    branches: [ main ]   # запускается каждый раз когда загружаешь файлы
+
+jobs:
+  build-windows:
+    runs-on: windows-latest   # GitHub запускает это на настоящем Windows-сервере
+
+    steps:
+      # 1. Скачиваем твой код
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Устанавливаем MSYS2 (среда для компиляции)
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-wxwidgets3.2-msw
+
+      # 3. Компилируем main.cpp → GameVault.exe
+      - name: Compile
+        shell: msys2 {0}
+        run: |
+          g++ main.cpp -o GameVault.exe \
+            $(wx-config --cxxflags) \
+            $(wx-config --libs all) \
+            -mwindows -O2 -std=c++17
+
+      # 4. Копируем нужные DLL рядом с .exe
+      - name: Copy DLLs
+        shell: msys2 {0}
+        run: |
+          MINGW_BIN=/mingw64/bin
+          cp $MINGW_BIN/libgcc_s_seh-1.dll    .
+          cp $MINGW_BIN/libstdc++-6.dll        .
+          cp $MINGW_BIN/libwinpthread-1.dll    .
+          cp $MINGW_BIN/wxmsw*.dll             . 2>/dev/null || true
+
+      # 5. Упаковываем всё в zip и сохраняем
+      # Этот zip можно будет скачать прямо с GitHub
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path GameVault_Windows
+          Copy-Item GameVault.exe GameVault_Windows/
+          Copy-Item *.dll GameVault_Windows/ -ErrorAction SilentlyContinue
+          Compress-Archive -Path GameVault_Windows/* -DestinationPath GameVault_Windows.zip
+
+      # 6. Публикуем как артефакт — кнопка скачать появится на GitHub
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: GameVault-Windows
+          path: GameVault_Windows.zip
+          retention-days: 30   # хранится 30 дней
