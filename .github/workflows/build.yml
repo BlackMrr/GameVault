@@ -32,19 +32,11 @@ jobs:
             $(wx-config --libs all) \
             -mwindows -O2 -std=c++17
 
-     # 4. Копируем все нужные DLL
+    # 4. Копируем все DLL
       - name: Copy DLLs
         shell: msys2 {0}
-        run: |
-          cp /mingw64/bin/libgcc_s_seh-1.dll   .
-          cp /mingw64/bin/libstdc++-6.dll       .
-          cp /mingw64/bin/libwinpthread-1.dll   .
-          cp /mingw64/bin/liblzma-5.dll         .
-          cp /mingw64/bin/zlib1.dll             .
-          cp /mingw64/bin/libpcre2-16-0.dll     .
-          cp /mingw64/bin/wxmsw*.dll            . 2>/dev/null || true
-          cp /mingw64/bin/wxbase*.dll           . 2>/dev/null || true
-
+        run: cp /mingw64/bin/*.dll .
+        
       # 5. Упаковываем всё в zip и сохраняем
       # Этот zip можно будет скачать прямо с GitHub
       - name: Package
