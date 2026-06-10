@@ -41,6 +41,7 @@ jobs:
           cp $MINGW_BIN/libstdc++-6.dll        .
           cp $MINGW_BIN/libwinpthread-1.dll    .
           cp $MINGW_BIN/wxmsw*.dll             . 2>/dev/null || true
+          cp $MINGW_BIN/wxbase*.dll            . 2>/dev/null || true
 
       # 5. Упаковываем всё в zip и сохраняем
       # Этот zip можно будет скачать прямо с GitHub
